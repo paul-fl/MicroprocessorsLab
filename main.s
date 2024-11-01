@@ -11,6 +11,8 @@ main:
 setup:	
 	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
+	movlw 0x0 
+	movwf TRISC, A ; Port C all outputs
 	goto	start
 	; ******* My data and where to put it in RAM *
 myTable:
@@ -32,7 +34,7 @@ start:
 	movwf 	counter, A	; our counter register
 loop:
         tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0	; move read data from TABLAT to (FSR0), increment FSR0	
+	movff	TABLAT, PORTC	; move read data from TABLAT to (FSR0), increment FSR0	
 	decfsz	counter, A	; count down to zero
 	bra	loop		; keep going until finished
 	
