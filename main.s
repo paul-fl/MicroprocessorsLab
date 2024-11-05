@@ -17,25 +17,14 @@ setup:
 	movwf	0x20, A
 up_loop: 
 	incf	LATC, F
-	decf	0x20
-	;call delay
-	btfss	LATC, 2		    ; Check bit 2 is 1 if it is skip
+	decfsz	0x20, A	
+	;call delay	  
 	goto	up_loop
-	
+	movwf	0x20, A
 down_loop:
 	decf	LATC, F
+	decfsz	0x20, A	
 	;call delay
-	btfss	LATC, 0		    ;check if value is 0
 	goto	down_loop
-	
-loop:
-	movff 	0x06, PORTB
-	incf 	0x06, W, A
-test:
-	movwf	0x06, A	    ; Test for end of loop condition
-	movlw 	0x63
-	cpfsgt 	0x06, A
-	bra 	loop		    ; Not yet finished goto start of loop again
-	goto 	0x0		    ; Re-run program from start
 
 	end	main
