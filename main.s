@@ -32,12 +32,18 @@ start:
 	movwf	TBLPTRL, A	; load low byte to TBLPTRL
 	movlw	22		; 22 bytes to read
 	movwf 	counter, A	; our counter register
+	movlw 0x5 ; set delay counter
 loop:
         tblrd*+			; move one byte from PM to TABLAT, increment TBLPRT
 	movff	TABLAT, PORTC	; move read data from TABLAT to (FSR0), increment FSR0	
 	decfsz	counter, A	; count down to zero
+	movwf 0x20, A ; store delay counter into FR 0x20
+	call delay
 	bra	loop		; keep going until finished
 	
 	goto	0
-
+delay:	    ; a delay subroutine
+	decfsz 0x20, A ; decrement until zero
+	bra delay
+	return
 	end	main
