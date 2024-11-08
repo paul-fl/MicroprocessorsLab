@@ -19,7 +19,7 @@ setup:
 	movwf	0x40, A		    ; Sets big loop
 
 main_loop:
-	movlw	0x0F	    ;reset amplitude counter
+	movlw	0xfF	    ;reset amplitude counter
 	movwf	0x20, A
 up_loop: 
 	incf	LATC, F
@@ -27,7 +27,7 @@ up_loop:
 	decfsz	0x20, A		  
 	goto	up_loop
 
-	movlw	0x0F		    ;reset amplitude counter
+	movlw	0xfF		    ;reset amplitude counter
 	movwf	0x20, A
 	
 down_loop:
