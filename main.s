@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
+extrn	KeyPad_Setup, KeyPad_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -25,8 +25,8 @@ rst: 	org 0x0
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
-	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup UART
+	call	KeyPad_Setup	; setup KeyPad
+	call	LCD_Setup	; setup LCD
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -44,9 +44,9 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	decfsz	counter, A		; count down to zero
 	bra	loop		; keep going until finished
 		
-	movlw	myTable_l	; output message to UART
+	movlw	myTable_l	; output message to KeyPad
 	lfsr	2, myArray
-	call	UART_Transmit_Message
+	call	KeyPad_Transmit_Message
 
 	movlw	myTable_l	; output message to LCD
 	addlw	0xff		; don't send the final carriage return to LCD
@@ -57,8 +57,8 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	; call	LCD_Clear_Display   
 	
 	
-	call	LCD_Set_Cursor
-	movlw	myTable_l
+	call	LCD_Set_Cursor	    ;set cursor to second line
+	movlw	myTable_l	    ;
 	addlw	0xff
 	lfsr	2, myArray
 	call	LCD_Write_Message

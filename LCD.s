@@ -54,7 +54,7 @@ LCD_Clear_Display:
     return
     
 LCD_Set_Cursor:
-    movlw	0xC0
+    movlw	0xC0		; Set cursor to the second line
     call	LCD_Send_Byte_I
     movlw	10		; wait 40us
     call	LCD_delay_x4us
