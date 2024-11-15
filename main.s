@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-extrn	KeyPad_Setup, KeyPad_Transmit_Message  ; external subroutines
+extrn	KeyPad_Setup, Read_Key  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -26,47 +26,55 @@ rst: 	org 0x0
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call	KeyPad_Setup	; setup KeyPad
-	call	LCD_Setup	; setup LCD
+	;call	LCD_Setup	; setup LCD
 	goto	start
 	
-	; ******* Main programme ****************************************
-start: 	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(myTable)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
+	; ******* Main programme **************************************** 	;lfsr	0, myArray	; Load FSR0 with address in RAM	
+	;movlw	low highword(myTable)	; address of data in PM
+	;movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	;movlw	high(myTable)	; address of data in PM
+	;movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	;movlw	low(myTable)	; address of data in PM
+	;movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	;movlw	myTable_l	; bytes to read
+	;movwf 	counter, A		; our counter register
+	;tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	;movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	;decfsz	counter, A		; count down to zero
+	;bra	loop		; keep going until finished
 		
-	movlw	myTable_l	; output message to KeyPad
-	lfsr	2, myArray
-	call	KeyPad_Transmit_Message
+	;movlw	myTable_l	; output message to KeyPad
+	;lfsr	2, myArray
+	;call	KeyPad_Transmit_Message
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	;movlw	myTable_l	; output message to LCD
+	;addlw	0xff		; don't send the final carriage return to LCD
+	;lfsr	2, myArray
+	;call	LCD_Write_Message
 	
 	; call	delay		;call routine to clear the display
 	; call	LCD_Clear_Display   
 	
 	
-	call	LCD_Set_Cursor	    ;set cursor to second line
-	movlw	myTable_l	    ;
-	addlw	0xff
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	;call	LCD_Set_Cursor	    ;set cursor to second line
+	;movlw	myTable_l	    ;
+	;addlw	0xff
+	;lfsr	2, myArray
+	;call	LCD_Write_Message
 	
 	
-	goto	$		; goto current line in code
+	;goto	$		; goto current line in code
 
+start:
+	call Read_Key  ; Call Read_Key until a key is pressed
+	bra loop
+
+loop:  
+	call Read_Key  ; Continuously call Read_Key in the main loop
+	bra loop      ; Repeat loop
+	
 	; a delay subroutine if you need one, times around loop in delay_count
+	
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
