@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global  KeyPad_setup
+global  KeyPad_setup, KeyPad_main
 
 psect	udata_acs   ; reserve data space in access ram
 KeyPad_counter: ds    1	    ; reserve 1 byte for variable KeyPad_counter

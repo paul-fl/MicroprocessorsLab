@@ -1,7 +1,8 @@
 #include <xc.inc>
 
-extrn	KeyPad_Setup, Read_Key  ; external subroutines
+extrn	KeyPad_setup, KeyPad_main  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor
+extrn	UART_Setup, UART_Transmit_Message
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
