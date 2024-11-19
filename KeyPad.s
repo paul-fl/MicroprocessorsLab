@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global  KeyPad_Setup, Read_Key
+global  KeyPad_setup
 
 psect	udata_acs   ; reserve data space in access ram
 KeyPad_counter: ds    1	    ; reserve 1 byte for variable KeyPad_counter
@@ -19,7 +19,7 @@ KeyPad_setup:
     return
 
     
-Read_Key:
+KeyPad_main:
     
     movf    PORTE, W         ; Read the value of PORTE (RC0-RC3)
     andlw   0x0F             ; Mask out other bits, keep only RC0-RC3 (rows)
@@ -35,10 +35,9 @@ Read_Key:
     
     movf    KeyPad_Row, W   ; Load the row state into W
     iorwf   KeyPad_Col, W   ; Perform OR with the column state (combines the states)
-    movwf   KeyPad_RowCol   ; Store the combined row and column state in KeyPad_RowCol
+    movf    keyval, W; Store the combined row and column state in KeyPad_RowCol
     
-   movf    keyval, W
-
+    
 Combo_tests: ; iteratively go through each of the 16 combinations until the value in the keyval register matches with the one being tested
     movlw 0xFF ; i.e. if no value has been pressed, stay within this loop until no longer true 
     cpfseq keyval, A ; compare value in keyval with W, store result in A
@@ -49,7 +48,7 @@ test_0: ;0111 0111
     movlw 0x77 ; CHECK
     cpfseq keyval, A 
     bra test_1
-    retlw 0x77 ; REPLACE WITH APPROPRIATE ASCII CHARACTER!
+    retlw 0x77 ; ASCII CHARACTER!
 
 test_1: ;0111 1011
     movlw 0x7B ; CHECK
