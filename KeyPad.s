@@ -1,146 +1,149 @@
 #include <xc.inc>
     
-global  KeyPad_setup, KeyPad_output, Keypad_to_LCD
+global  Keypad_Setup, Keypad_Read
 
 psect	udata_acs   ; reserve data space in access ram
-KeyPad_counter: ds    1	    ; reserve 1 byte for variable KeyPad_counter
-KeyPad_Row: ds 1             ; reserve 1 byte for row scanning
-KeyPad_Col: ds 1             ; reserve 1 byte for column scanning
+Keypad_counter: ds    1	    ; reserve 1 byte for variable UART_counter
+Keypad_Value: ds 1
+Keypad_Value_Row: ds  1
+Keypad_Value_Col: ds  1
 combineddata: ds 1
-tempchar: ds    1
     
-psect	uart_code,class=CODE
     
-KeyPad_setup:
-      
-    movlb   0x0F    ;Loads 1111 to BSR
-    bsf	    REPU    ;Makes SBR15 ready for inputs
-    movlb   0x00    ;Loads 0000 to lower bits of BSR 
-    clrf    TRISF
-    clrf    LATE
-    return
-
-    
-KeyPad_main:
-    
-    movlw   0x0F    ;Move 00001111 to WR
-    movwf   TRISE   ;Sets lower 4 bits to 1-configures them as inputs
-    movf    PORTE, W         ; Read the value of PORTE (RC0-RC3)
- 
-    movwf   KeyPad_Row  ; Store the row state 
-
-    movlw   0xF0    ;Move 11110000 to WR
-    movwf   TRISE
-    movlw   0xF0	    ;	Make all rows 0 to read columns
-    
-    movf    PORTE, W         ; Read the value of PORTC (RC0-RC3)
-
-    movwf   KeyPad_Col        ; Store the col state
-    
-    movf    KeyPad_Row, W, A   ; Load the row state into W
-    iorwf   KeyPad_Col, W, A   ; Perform OR with the column state (combines the states)
-    movwf    combineddata   ; Store the combined row and column state in KeyPad_RowCol
-    movwf    LATF
+psect	Keypad_code,class=CODE
+Keypad_Setup:
+    banksel	PADCFG1
+    bsf		REPU
+    clrf	LATE, A		; Write 0s to the LATE
+    clrf	TRISD
     return
     
-KeyPad_output:
-    call    KeyPad_main
-    bra	    test_none
+Keypad_Read:
+    call	Keypad_Setup_Row
+    call	Keypad_Read_Row
+    call	Keypad_Setup_Col
+    call	Keypad_Read_Col
+    movf	Keypad_Value_Row, W, A
+    iorwf	Keypad_Value_Col, W, A
+    movwf	PORTD
+    movwf	combineddata
+    bra		test_1
     return
+    
+    
+Keypad_Setup_Row:
+    movlw	0x0F		;Set TRISE to 0x0F (0-3 as input, 4-7 as output)
+    movwf	TRISE, A
+    call	Keypad_Delay	; wait 10ms for Keypad output pins voltage to settle
+    return
+    
+Keypad_Setup_Col:
+    movlw	0xF0		;Set TRISE to 0xF0 (0-3 as output, 4-7 as input)
+    movwf	TRISE, A
+    call	Keypad_Delay	; wait 10ms for Keypad output pins voltage to settle
+    return
+    
+Keypad_Read_Row:
+	movf	PORTE, W, A	; Read PORTE to determine the logic levels on PORTE 0-3
+	movwf	Keypad_Value_Row, A
+	return
 
-test_none:
-    movlw   0xFF
-    cpfseq  combineddata	
-    bra	    test_0
-    retlw   0xFF	
-test_0:
-    movlw   0xEB	
-    cpfseq  combineddata	
-    bra	    test_1
-    retlw   0x0E	   
+Keypad_Read_Col:
+	movf	PORTE, W, A	; Read PORTE to determine the logic levels on PORTE 4-7
+	movwf	Keypad_Value_Col, A
+	return
+   
 test_1:
-    movlw   0x77	
+    movlw   11100111B	
     cpfseq  combineddata	
     bra	    test_2
-    retlw   0x01
+    retlw   '1'
 test_2:
-    movlw   0x7B
+    movlw   11101011B
     cpfseq  combineddata	
     bra	    test_3
-    retlw   0x04
+    retlw   '2'
 test_3:
-    movlw   0x7D	
-    cpfseq  combineddata	
-    bra	    test_4
-    retlw   0x07
-test_4:
-    movlw   0xB7	
-    cpfseq  combineddata	
-    bra	    test_5
-    retlw   0x02
-test_5:
-    movlw   0xBB
-    cpfseq  combineddata	
-    bra	    test_6
-    retlw   0x05	
-test_6:
-    movlw   0xBD
-    cpfseq  combineddata	
-    bra	    test_7
-    retlw   0x08
-test_7:
-    movlw   0xD7	
-    cpfseq  combineddata
-    bra	    test_8
-    retlw   0x03
-test_8:
-    movlw   0xDB
-    cpfseq  combineddata	
-    bra	    test_9
-    retlw   0x06
-test_9:
-    movlw   0xDD	
-    cpfseq  combineddata	
-    bra	    test_A
-    retlw   0x09
-test_A:
-    movlw   0xE7
-    cpfseq  combineddata	
-    bra	    test_B
-    retlw   0x0F
-test_B:
-    movlw   0xED
-    cpfseq  combineddata	
-    bra	    test_C
-    retlw   0x0D
-test_C:
-    movlw   0xEE
-    cpfseq  combineddata	
-    bra	    test_D
-    retlw   0x0C
-test_D:
-    movlw   0xDE
-    cpfseq  combineddata	
-    bra	    test_E
-    retlw   0x0B
-test_E:
-    movlw   0xBE
+    movlw   11101101B	
     cpfseq  combineddata	
     bra	    test_F
-    retlw   0x00
+    retlw   '3'
 test_F:
-    movlw   0x7E
+    movlw   11101110B	
+    cpfseq  combineddata	
+    bra	    test_4
+    retlw   'F'
+test_4:
+    movlw   11010111B
+    cpfseq  combineddata	
+    bra	    test_5
+    retlw   '4'	
+test_5:
+    movlw   11101011B
+    cpfseq  combineddata	
+    bra	    test_6
+    retlw   '5'
+test_6:
+    movlw   11011101B	
+    cpfseq  combineddata
+    bra	    test_E
+    retlw   '6'
+test_E:
+    movlw   11011110B
+    cpfseq  combineddata	
+    bra	    test_7
+    retlw   'E'
+test_7:
+    movlw   10110111B	
+    cpfseq  combineddata	
+    bra	    test_8
+    retlw   '7'
+test_8:
+    movlw   10111011B
+    cpfseq  combineddata	
+    bra	    test_9
+    retlw   '8'
+test_9:
+    movlw   10111101B
+    cpfseq  combineddata	
+    bra	    test_D
+    retlw   '9'
+test_D:
+    movlw   10111110B
+    cpfseq  combineddata	
+    bra	    test_A
+    retlw   'D'
+test_A:
+    movlw   01110111B
+    cpfseq  combineddata	
+    bra	    test_0
+    retlw   'A'
+test_0:
+    movlw   01111011B
+    cpfseq  combineddata	
+    bra	    test_B
+    retlw   '0'
+test_B:
+    movlw   01111101B
+    cpfseq  combineddata	
+    bra	    test_C
+    retlw   'B'
+  
+test_C:
+    movlw   01111110B
     cpfseq  combineddata	
     bra	    invalid
-    retlw   0x0A
+    retlw   'C'
+
 invalid:
-    bra	    KeyPad_output
+    bra	  Keypad_Read  
     
-Keypad_to_LCD:
-    movwf    tempchar
     
-Delay:
+Keypad_Delay:	    
     movlw   0xFF
-    
-    end
+    movwf   Keypad_counter, A
+Keypad_Delay_Loop:
+    decfsz  Keypad_counter, A
+    bra	    Keypad_Delay_Loop
+    return
 

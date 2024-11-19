@@ -1,13 +1,12 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor, LCD_Send_Char_D
+global  LCD_Setup, LCD_Write_Message
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms:	ds 1   ; reserve 1 byte for ms counter
 LCD_tmp:	ds 1   ; reserve 1 byte for temporary use
-LCD_tmp2:	ds 1
 LCD_counter:	ds 1   ; reserve 1 byte for counting through nessage
 
 	LCD_E	EQU 5	; LCD enable bit
@@ -46,20 +45,6 @@ LCD_Setup:
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
 	return
-
-LCD_Clear_Display:
-    movlw	00000001B	; display clear
-    call	LCD_Send_Byte_I
-    movlw	2		; wait 2ms
-    call	LCD_delay_ms
-    return
-    
-LCD_Set_Cursor:
-    movlw	0xC0		; Set cursor to the second line
-    call	LCD_Send_Byte_I
-    movlw	10		; wait 40us
-    call	LCD_delay_x4us
-    return
 
 LCD_Write_Message:	    ; Message stored at FSR2, length stored in W
 	movwf   LCD_counter, A
@@ -147,22 +132,5 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	bc 	lcdlp1		; carry, then loop again
 	return			; carry reset so return
 
-LCD_Send_Char_D:
-    movwf   LCD_tmp2, A          ; Move the literal to a temporary register
-    swapf   LCD_tmp2, W, A       ; Swap nibbles, high nibble goes first
-    andlw   0x0F                ; Select just the low nibble
-    movwf   LATB, A             ; Output data bits to LCD
-    bsf     LATB, LCD_RS, A     ; Set RS bit for data write
-    call    LCD_Enable          ; Pulse enable bit
-    movf    LCD_tmp2, W, A       ; Swap nibbles, now do the low nibble
-    andlw   0x0F                ; Select just the low nibble
-    movwf   LATB, A             ; Output data bits to LCD
-    bsf     LATB, LCD_RS, A     ; Set RS bit for data write
-    call    LCD_Enable          ; Pulse enable bit
-    movlw   10                  ; Delay for stability (adjust as needed)
-    call    LCD_delay_ms
-    return	
 
     end
-
-

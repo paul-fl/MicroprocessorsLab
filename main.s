@@ -1,9 +1,9 @@
 #include <xc.inc>
 
-extrn	KeyPad_setup, KeyPad_output, Keypad_to_LCD  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor, LCD_Send_Char_D
+extrn	Keypad_Setup, Keypad_Read; external subroutines
+extrn	LCD_Setup, LCD_Write_Message
 extrn	UART_Setup, UART_Transmit_Message
-	
+    
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
@@ -19,20 +19,22 @@ myTable:
 	myTable_l   EQU	13	; length of data
 	align	2
     
-psect	code, abs	
+psect	code, abs
+	
 rst: 	org 0x0
  	goto	setup
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
-	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup UART
-	call	KeyPad_setup
+	call	LCD_Setup	
+	call	UART_Setup
+	call	Keypad_Setup	
 	goto	start
 	
 	; ******* Main programme ****************************************
-start: 	lfsr	0, myArray	; Load FSR0 with address in RAM	
+start: 	
+	lfsr	0, myArray	; Load FSR0 with address in RAM	
 	movlw	low highword(myTable)	; address of data in PM
 	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
 	movlw	high(myTable)	; address of data in PM
@@ -41,26 +43,31 @@ start: 	lfsr	0, myArray	; Load FSR0 with address in RAM
 	movwf	TBLPTRL, A		; load low byte to TBLPTRL
 	movlw	myTable_l	; bytes to read
 	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
+loop: 	
+	;tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	;movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	;decfsz	counter, A		; count down to zero
+	;bra	loop		; keep going until finished
 		
-	movlw	myTable_l	; output message to UART
-	lfsr	2, myArray
-	call	UART_Transmit_Message
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
+	;lfsr	2, myArray + 6
+	;movwf	INDF2
+	call	Keypad_Read
+	;movlw	myTable_l	; output message to UART
+	;lfsr	2, myArray
+	;call	UART_Transmit_Message
+
+	;movlw	myTable_l	; output message to LCD
+	;addlw	0xff		; don't send the final carriage return to LCD
+	;lfsr	2, myArray
 	call	LCD_Write_Message
-	call	KeyPad_output
-	call	Keypad_to_LCD
-	call	LCD_Send_Char_D
-	goto	$		; goto current line in code
 
+	goto	start		; goto current line in code
+
+	
 	; a delay subroutine if you need one, times around loop in delay_count
-delay:	decfsz	delay_count, A	; decrement until zero
+delay:	
+	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
 
