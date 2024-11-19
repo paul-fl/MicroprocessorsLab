@@ -1,7 +1,7 @@
 #include <xc.inc>
 
-extrn	KeyPad_setup, KeyPad_main  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor
+extrn	KeyPad_setup, KeyPad_output, Keypad_to_LCD  ; external subroutines
+extrn	LCD_Setup, LCD_Write_Message, LCD_Clear_Display, LCD_Set_Cursor, LCD_Send_Char_D
 extrn	UART_Setup, UART_Transmit_Message
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -54,7 +54,9 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
-	call	KeyPad_main
+	call	KeyPad_output
+	call	Keypad_to_LCD
+	call	LCD_Send_Char_D
 	goto	$		; goto current line in code
 
 	; a delay subroutine if you need one, times around loop in delay_count
