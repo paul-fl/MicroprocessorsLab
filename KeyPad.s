@@ -32,13 +32,13 @@ Keypad_Read:
     
     
 Keypad_Setup_Row:
-    movlw	0x0F		;Set TRISE to 0x0F (0-3 as input, 4-7 as output)
+    movlw	0xF0		;Set TRISE to 0x0F (0-3 as input, 4-7 as output)
     movwf	TRISE, A
     call	Keypad_Delay	; wait 10ms for Keypad output pins voltage to settle
     return
     
 Keypad_Setup_Col:
-    movlw	0xF0		;Set TRISE to 0xF0 (0-3 as output, 4-7 as input)
+    movlw	0x0F		;Set TRISE to 0xF0 (0-3 as output, 4-7 as input)
     movwf	TRISE, A
     call	Keypad_Delay	; wait 10ms for Keypad output pins voltage to settle
     return

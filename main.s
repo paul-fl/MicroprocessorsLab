@@ -1,7 +1,7 @@
 #include <xc.inc>
 
 extrn	Keypad_Setup, Keypad_Read; external subroutines
-extrn	LCD_Setup, LCD_Write_Message
+extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D
 extrn	UART_Setup, UART_Transmit_Message
     
 psect	udata_acs   ; reserve data space in access ram
@@ -60,7 +60,8 @@ loop:
 	;movlw	myTable_l	; output message to LCD
 	;addlw	0xff		; don't send the final carriage return to LCD
 	;lfsr	2, myArray
-	call	LCD_Write_Message
+	;call	LCD_Write_Message
+	call	LCD_Send_Byte_D
 
 	goto	start		; goto current line in code
 
